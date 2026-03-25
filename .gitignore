@@ -1,0 +1,10 @@
+node_modules
+.DS_Store
+dist
+.env
+.gemini
+# generated images for website
+# website/hero-bg.png
+# OS generated files
+Thumbs.db
+Desktop.ini

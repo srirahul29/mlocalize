@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          Role      @default(USER)
+  isVerified    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  orders        Order[]
+  blogs         Blog[]
+  profile       Profile?
+}
+
+model Profile {
+  id      String  @id @default(cuid())
+  bio     String?
+  avatar  String?
+  userId  String  @unique
+  user    User    @relation(fields: [userId], references: [id])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String
+  price       Float
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model CmsPage {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String
+  seoTitle    String?
+  seoDesc     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Blog {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  image     String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  serviceId    String
+  service      Service     @relation(fields: [serviceId], references: [id])
+  status       OrderStatus @default(PENDING)
+  totalPrice   Float
+  teamMembers  Json?       // Changed from String[] to Json for better compatibility
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  payments     Payment[]
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  orderId          String
+  order            Order    @relation(fields: [orderId], references: [id])
+  stripeSessionId  String   @unique
+  amount           Float
+  status           String   @default("PENDING") // PENDING, PAID, FAILED
+  createdAt        DateTime @default(now())
+}
